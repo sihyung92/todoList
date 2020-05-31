@@ -12,9 +12,14 @@ function TodoApp() {
             this.todoItems.push(newTodoItem);
             this.setState(this.todoItems);
         }
-        , onRemove: itemId => {
-            const idx = this.todoItems.indexOf(this.todoItems.find(item => item.id == itemId));
+        , onRemove: id => {
+            const idx = this.todoItems.indexOf(this.todoItems.find(item => item.id == id));
             if (idx > -1) this.todoItems.splice(idx, 1);
+            this.setState(this.todoItems);
+        }
+        , onEdit: (id, content) => {
+            const $todoItem = this.todoItems.find(item => item.id == id);
+            if ($todoItem) $todoItem.content = content;
             this.setState(this.todoItems);
         }
     };
@@ -35,14 +40,12 @@ function TodoInput({onAdd}) {
     $todoInput.addEventListener("keydown", event => this.addTodoItem(event));
 
     this.isValid = (event, value) => {
-        if (value.trim() === ""){
+        if (value.trim() === "") {
             return false;
         }
-        if (event.key !== "Enter") {
-            return false;
-        }
-        return true;
-    }
+        return event.key === "Enter";
+
+    };
 
     this.addTodoItem = event => {
         const $newTodoTarget = event.target;
@@ -54,7 +57,7 @@ function TodoInput({onAdd}) {
 }
 
 // todoList 보여주는 컴포넌트
-function TodoList({onRemove}) {
+function TodoList({onRemove, onEdit}) {
     this.$todoList = document.querySelector("#todo-list");
 
     this.setState = updatedTodoItems => {
@@ -69,7 +72,10 @@ function TodoList({onRemove}) {
 
         const $destroyBtns = this.$todoList.querySelectorAll("#todo-list .destroy");
         $destroyBtns.forEach($destroyBtn => $destroyBtn.addEventListener("click", event => this.removeItem(event)));
-    }
+
+        const $todoItems = this.$todoList.querySelectorAll("#todo-list li");
+        $todoItems.forEach($todoItem => $todoItem.addEventListener("dblclick", event => this.editingItem(event)));
+    };
 
     this.completeItem = event => {
         const $itemTarget = event.target.closest("li");
@@ -81,7 +87,35 @@ function TodoList({onRemove}) {
     this.removeItem = event => {
         const itemId = event.target.closest("li").id;
         onRemove(itemId);
-    }
+    };
+
+    this.editingItem = event => {
+        const $item = event.target.closest("li");
+        const oldValue = $item.querySelector(".edit").value;
+        $item.classList.add("editing");
+        $item.querySelector(".edit").focus();
+        $item.addEventListener("keydown", event => this.editItem(event, oldValue));
+    };
+
+    this.editItem = function (event, oldValue) {
+        const $target = event.target;
+        const $targetId = $target.closest("li").id;
+        if (event.key === "Escape") {
+            event.target.closest("li").classList.remove("editing");
+            event.target.value = oldValue;
+        }
+
+        if (this.isValid(event, $target.value)) {
+            onEdit($targetId,$target.value);
+        }
+    };
+
+    this.isValid = (event, value) => {
+        if (value.trim() === "") {
+            return false;
+        }
+        return event.key === "Enter";
+    };
 
     this.render = items => {
         this.$todoList.innerHTML = items.map(TodoItemTemplate).join("");
