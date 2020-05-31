@@ -6,7 +6,7 @@ function TodoApp() {
     this.idSequence = 0;
     this.todoItems = [];
 
-    this.statusChange = {
+    this.status = {
         onAdd: contents => {
             const newTodoItem = TodoItem(this.idSequence++, contents);
             this.todoItems.push(newTodoItem);
@@ -22,15 +22,19 @@ function TodoApp() {
             if ($todoItem) $todoItem.content = content;
             this.setState(this.todoItems);
         }
+        , calcCount: () => {
+            return this.todoItems.length;
+        }
     };
 
     this.setState = updatedItems => {
         this.todoItems = updatedItems;
-        const todoList = new TodoList(this.statusChange);
+        const todoList = new TodoList(this.status);
+        new TodoCount(this.status);
         todoList.setState(this.todoItems);
     };
 
-    new TodoInput(this.statusChange);
+    new TodoInput(this.status);
 }
 
 // 입력 받는 컴포넌트
@@ -120,6 +124,11 @@ function TodoList({onRemove, onEdit}) {
     this.render = items => {
         this.$todoList.innerHTML = items.map(TodoItemTemplate).join("");
     };
+}
+
+function TodoCount({ calcCount }) {
+    const $todoCountNum = document.querySelector(".todo-count strong");
+    $todoCountNum.innerHTML = calcCount();
 }
 
 const todoApp = new TodoApp();
