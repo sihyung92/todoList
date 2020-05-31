@@ -1,6 +1,7 @@
-export default (id, content) => {
+export default (id, content, status = "active") => {
     return {
-        id: id,
-        content: content
+        id: id
+        ,content: content
+        ,status : status
     }
 }
